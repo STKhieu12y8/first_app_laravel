@@ -53,7 +53,10 @@ class FoodsController extends Controller
      */
     public function show($id)
     {
-        //
+        $food = Food::Find($id);
+        $category = Food::Find($food->category_id);
+        $food->category = $category;
+        return view('foods.detail')->with('food', $food);
     }
 
     /**

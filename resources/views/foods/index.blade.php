@@ -14,7 +14,8 @@
         <tbody>
             @foreach ($foods as $food)
                 <tr>
-                    <td>{{ $food->name }}</td>
+                
+                    <td><a href="foods/{{ $food->id }}">{{ $food->name }}</a></td>
                     <td>{{ $food->count }}</td>
                     <td>{{ $food->description }}</td>
                     <td><a href="foods/{{ $food->id }}/edit">Sửa</a></td>
