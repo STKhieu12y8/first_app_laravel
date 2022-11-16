@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Food;
+use App\Rules\Uppercase;
+use App\Http\Requests\CreateValidationRequest;
 
 class FoodsController extends Controller
 {
@@ -25,7 +28,10 @@ class FoodsController extends Controller
      */
     public function create()
     {
-        return view('foods.create');
+        $category = Category::all();
+        return view('foods.create', [
+            'category'=>$category,
+        ]);
     }
 
     /**
@@ -34,12 +40,33 @@ class FoodsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CreateValidationRequest $request)
     {
-        $food = new Food();
-        $food->name = $request->input('name');
-        $food->count = $request->input('count');
-        $food->description = $request->input('description');
+        $request->validate([
+            'name' => 'required',
+            'count' => 'required|integer|min:0|max:200',
+            'description' => 'required',
+            'image' => 'required|mimes:jpg,png,jpeg'
+        ]);
+
+        $generatedImageName = 'image'.time().'-'
+                                .$request->name.'.'
+                                .$request->image->extension();
+        
+        $request->image->move(public_path('images'), $generatedImageName);                                
+
+        // $food = new Food();
+        // $food->name = $request->input('name');
+        // $food->count = $request->input('count');
+        // $food->description = $request->input('description');
+
+        $food = Food::create([
+            'name' => $request->input('name'),
+            'count' => $request->input('count'),
+            'description' => $request->input('description'),
+            'category_id' => $request->input('category_id'),
+            'image_path' => $generatedImageName
+        ]);
 
         $food->save();
         return redirect('/foods');
@@ -78,8 +105,13 @@ class FoodsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CreateValidationRequest $request, $id)
     {
+        $request->validated([
+            'name'=> new Uppercase,
+            'count'=> 'required|integer|min:0|max:1000',
+            'category_id'=> 'required'
+        ]);
         $food = Food::where('id', $id)
                     ->update([
                         'name'=>$request->input('name'),
